@@ -128,6 +128,24 @@ impl Spring {
         Self::new(frequency * frequency, damping, 1.0)
     }
 
+    /// A spring that is written into the program, described the way
+    /// [`from_response`](Self::from_response) describes one:
+    /// `const QUICK: Spring = Spring::preset(0.2, 1.0);`.
+    ///
+    /// It cannot fail, so it can make a constant. A response or a damping
+    /// ratio outside a thousandth to a thousand, which is far beyond
+    /// anything that is an animation, is brought to the nearest end of that
+    /// range, and one that is not a number to its lower end.
+    pub const fn preset(response: f64, damping_ratio: f64) -> Self {
+        let frequency = TAU / response.max(1e-3).min(1e3);
+        let damping = 2.0 * damping_ratio.max(1e-3).min(1e3) * frequency;
+        Self {
+            stiffness: frequency * frequency,
+            damping,
+            mass: 1.0,
+        }
+    }
+
     /// The damping as a share of the damping that just keeps the spring from
     /// swinging. Below 1 it swings past its target and back.
     pub fn damping_ratio(&self) -> f64 {
@@ -372,5 +390,19 @@ mod tests {
         let heavy = Spring::new(100.0, 40.0, 4.0).unwrap();
         assert!((heavy.damping_ratio() - 1.0).abs() < 1e-12);
         assert!(!heavy.is_at_rest(0.0, 0.1, 0.01));
+    }
+
+    #[test]
+    fn a_preset_is_the_spring_its_description_gives() {
+        for (response, ratio) in [(0.2, 1.0), (0.45, 0.7), (1e-3, 1e3), (1e3, 1e-3)] {
+            let described = Spring::from_response(response, ratio);
+            assert_eq!(Ok(Spring::preset(response, ratio)), described);
+        }
+        // Past either end, and what is not a number.
+        let (quickest, slowest) = (Spring::preset(1e-3, 1e3), Spring::preset(1e3, 1e-3));
+        assert_eq!(Spring::preset(0.0, f64::INFINITY), quickest);
+        assert_eq!(Spring::preset(1e9, -4.0), slowest);
+        let no_number = Spring::preset(f64::NAN, f64::NAN);
+        assert_eq!(no_number, Spring::preset(1e-3, 1e-3));
     }
 }
