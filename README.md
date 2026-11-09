@@ -23,19 +23,28 @@
 
 ## Overview
 
+> **OfficeWorld is at the very beginning, and most of this page describes
+> a plan.** What exists today is the foundation of how it moves: springs
+> solved in closed form, easing curves and values that animate. There is no
+> editor, no window and nothing to open a file with yet.
+> [ROADMAP](docs/ROADMAP.md) says what is finished.
+
 Every office suite asks you to accept a trade.
 
-Microsoft 365 opens every file there is. It is a subscription, built
-around Microsoft's cloud. Google Workspace makes sharing easy, and it
-lives on Google's servers. LibreOffice is free and keeps your files on
-your disk, and its interface shows its age. Canva is a pleasure to use,
-and it needs an account and a connection.
+Microsoft 365 is where most of the world's documents come from. It is a
+subscription, built around Microsoft's cloud. Google Workspace makes
+sharing easy, and your documents live on Google's servers. LibreOffice is
+free and keeps your files on your disk, on a code base that goes back to
+the 1980s. Canva made design easy for everyone, as an online service
+behind an account.
 
-And each of them is a set of separate programs. A chart copied from the
-spreadsheet into the report is a picture of a chart. When the numbers
-change, the report is wrong and nobody notices.
+In the three classic suites a document also belongs to one program: the
+word processor, the spreadsheet or the presentation program. A chart from
+the spreadsheet can be linked into the report. It remains a link to a
+second file that has to be refreshed, and to change it you go back to the
+other program.
 
-OfficeWorld is one app:
+OfficeWorld is being built as one app. The goals:
 
 - **Everything is one document.** Docs, Sheets, Slides, Design, Board and
   PDF are views of the same engine. What you make in one is live in the
@@ -48,18 +57,12 @@ OfficeWorld is one app:
   and nothing needs a cloud. Sync and working together in real time are
   optional, end-to-end encrypted, and run on a server you can host
   yourself.
-- **The files you already have.** Word, Excel and PowerPoint files open
-  and save faithfully. How faithfully is measured against real documents
-  and published, not promised.
-- **The rest of the desk.** Files, mail, calendar and contacts sit beside
-  the editors and speak the standard protocols, so they work with the
-  provider you already have or with your own server.
-
-> OfficeWorld is at the very beginning. What exists today is the
-> foundation of how it moves: springs solved in closed form, easing curves
-> and values that animate. **There is no editor, no window and nothing to
-> open a file with yet.** Everything else on this page describes where it
-> is going. [ROADMAP](docs/ROADMAP.md) says what is finished.
+- **The files you already have.** Word, Excel and PowerPoint files have to
+  open and save faithfully. How faithfully will be measured against real
+  documents and published as a number.
+- **The rest of the desk.** Files, mail, calendar and contacts beside the
+  editors, speaking the standard protocols, so they work with the provider
+  you already have or with your own server.
 
 ---
 
@@ -129,7 +132,7 @@ You need rustup, which installs the pinned Rust 1.99.0 from
 ```sh
 git clone https://github.com/Elchi-dev/OfficeWorld
 cd OfficeWorld
-./tools/check.sh          # everything CI runs, in the same order
+./tools/check.sh          # every check of CI's main job, in the same order
 python3 tools/stats.py    # lines of code and of test per crate
 ```
 
@@ -194,24 +197,21 @@ today: they exist. What can be judged already is how it is built:
   of code, counted without comments and blank lines.
   `tools/stats.py --check` fails the build otherwise, so a test has to
   protect behaviour that matters.
+- **Every change to the code has to be noticed.** `cargo mutants` changes
+  the code in small ways, one at a time: a flipped comparison, a function
+  that returns a constant. It has to end without a change the tests let
+  through. The few that no test can notice are listed, each with its
+  reason, in [`.cargo/mutants.toml`](.cargo/mutants.toml). CI repeats this
+  for everything a push touches.
 - **Checked against the definition.** The spring solution is put back into
   the differential equation it claims to solve. The easing solver is
   compared with the curve as it is drawn. The CSS curves are compared with
   values worked out in exact fractions.
-- **Every test was seen failing.** 75 faults were put into the code on
-  purpose, one at a time: a flipped sign, a dropped term, a loosened
-  check. The tests caught 74. The one they let through makes the easing
-  solver slower and changes no result.
 - **Three systems.** The tests run on Linux, Windows and macOS on every
   push.
 
-| | |
-| --- | --- |
-| Rust, code | 345 lines in 1 crate |
-| Rust, tests | 164 lines, 11 tests and 3 checked examples |
-| Dependencies | 0 |
-
-`python3 tools/stats.py` prints the current numbers.
+`python3 tools/stats.py` prints the lines of code and of test per crate,
+and [CHANGELOG](CHANGELOG.md) says what was verified and how.
 
 ---
 
@@ -233,15 +233,16 @@ today: they exist. What can be judged already is how it is built:
 OfficeWorld is source-available under the
 [Business Source License 1.1](LICENSE). In short:
 
-- You may use it, at home and at work, free of charge. You may read the
-  source, change it and pass it on.
-- You may not sell it: not the app, not a changed version, not access to
-  it as a hosted service, not a product whose value is mostly OfficeWorld.
-  That takes a commercial licence, from
+- You may read the source, change it and pass it on.
+- You may use it for real work, at home and in a company, free of charge,
+  as long as you do not sell it. Selling means charging for OfficeWorld
+  itself, for a changed version, for access to it as a hosted service, or
+  for a product or service whose value comes entirely or substantially
+  from it. Whoever does that needs a commercial licence, from
   [legal@elchi.dev](mailto:legal@elchi.dev).
 - Four years after a version is published, that version becomes
   Apache 2.0.
 
-The licence text decides, not this summary.
+This is a summary and not the licence. The licence text decides.
 
 **Made by Elchi**

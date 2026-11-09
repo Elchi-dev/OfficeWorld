@@ -26,25 +26,29 @@ You need:
 ./tools/check.sh
 ```
 
-It runs what CI runs, in the same order, and stops at the first check
-that fails: formatting, clippy, the tests, the documentation build and the
-three project rules. CI's Linux job runs the same script.
+It runs the checks of CI's main job, in the same order, and stops at the
+first one that fails: formatting, clippy, the tests, the documentation
+build and the three project rules. CI's Linux job runs the same script.
+CI also runs the tests on Windows and macOS, mutation-tests what a push
+changed and looks for known vulnerabilities.
 
 ## The rules
 
 - **Tests are few and needed.** At most one line of test for two lines of
   code, across the workspace. A test checks behaviour against its
   definition, is named after what it protects, and says in a comment what
-  goes wrong without it. Before you keep a test, break the code it
-  protects and watch it fail. [DECISIONS](docs/DECISIONS.md) has the
-  reasons.
+  goes wrong without it. [DECISIONS](docs/DECISIONS.md) has the reasons.
+- **Every change to the code has to be noticed.** `cargo mutants` (from
+  `cargo install cargo-mutants`) breaks the code in small ways and runs
+  the tests on each. It has to end without a missed change. A change no
+  test can notice goes into `.cargo/mutants.toml` with the reason.
 - **Unit tests live at the end of the file**, in one `#[cfg(test)]`
   module. The line count relies on it.
 - **Few dependencies.** A crate from outside needs a line in
   `tools/allowed-deps.txt` with its reason, and a record in
   [DECISIONS](docs/DECISIONS.md). Small, well specified pieces are written
   here.
-- **No unsafe code**, unless the crate's manifest allows it and a decision
+- **No unsafe code**, unless a module allows it for itself and a decision
   record says why. Every unsafe block then gets a `// SAFETY:` comment.
 - **No dashes.** No em dashes and no en dashes anywhere, in code, docs or
   commit messages. Use a comma, a colon or a full stop, and a hyphen in a

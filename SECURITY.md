@@ -10,9 +10,11 @@ Please do not report a security problem in a public issue or pull request.
 
 Use GitHub's private vulnerability reporting: the "Report a vulnerability"
 button on the repository's Security tab. Only the maintainer sees the
-report. If the button is not there, contact the maintainer on GitHub,
-[@Elchi-dev](https://github.com/Elchi-dev), and ask for a private channel
-before sending details.
+report.
+
+If the button is not there, open an issue that says only that you have a
+security report, with no details in it. The maintainer answers there and
+arranges a private way to send them.
 
 Say what you found, how to reproduce it and what it lets an attacker do.
 You will get an answer within a week. Fixes are credited unless you ask

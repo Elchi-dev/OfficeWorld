@@ -77,11 +77,16 @@ One formula covers the three regimes. With `envelope = exp(-decay * t)`:
 x(t) = envelope * (x0 * c(t) + (v0 + decay * x0) * s(t))
 ```
 
-`c` and `s` are cos and sin for a spring that overshoots, cosh and sinh
-for one that creeps in, and 1 and `t` for the one between them. For the
-creeping spring the two exponentials are multiplied out, because cosh
-alone grows past what a 64-bit float holds while the product is still an
-ordinary number.
+For a spring that swings past its target, `c` is cos and `s` is sin
+divided by its frequency. For one that creeps in, they are cosh and sinh
+divided by its rate. Between the two they are 1 and `t`, which is what
+both turn into as the frequency goes to zero. For the creeping spring the
+two exponentials are multiplied out, because cosh alone grows past what a
+64-bit float holds while the product is still an ordinary number.
+
+A spring is only built from constants the solution can be computed with:
+finite, above zero, and not so far apart that squaring them overflows. A
+span of time that is negative or not a number counts as none.
 
 **Rest** is decided by energy. `Spring::is_at_rest` asks whether the
 energy left could still carry the value further than a tolerance from its
@@ -91,14 +96,16 @@ to no, and that is the moment an animation stops asking for frames.
 **`Animated<T>`** is a value with a target. A new target, a new spring or
 a velocity handed over by a gesture takes effect from where the value is
 at that moment, at the speed it has. Restarting the stored state does not
-bend the path, so the motion does not depend on which frames were drawn.
+bend the path, so the motion does not depend on which frames were drawn. A
+clock that steps back does not rewind it.
 
 **`CubicBezier` and `Tween<T>`** are for motion whose length is given: a
 fade, or an animation that a presentation file describes by its duration.
 The curves are the cubic Bézier form CSS and the office formats use. The
 solver is Newton's method inside a bracket, so a curve that stands still
 in time cannot throw it off. A tween returns exactly the value it was sent
-to at its end.
+to at its end, and it is refused when its duration is negative or not
+finite.
 
 **`Animatable`** is what a value needs for all of this: adding, scaling
 and a length. It is implemented for `f32`, `f64` and arrays of them, and
@@ -136,10 +143,15 @@ file in OfficeWorld does not strip what it could not show.
 
 One Cargo workspace, one crate per part in `crates/<part>`, package name
 `ow-<part>`. The toolchain is pinned in `rust-toolchain.toml`. Every crate
-inherits the workspace lints: clippy's pedantic set as errors, no
-`unwrap` or `expect` outside tests, every public item documented, and
-unsafe code forbidden until a crate needs it and says why.
+inherits the workspace lints: clippy's pedantic set, no `unwrap` or
+`expect` outside tests, every public item documented, and unsafe code
+denied. The checks treat every warning as an error. A module that has to
+use unsafe code, to talk to a platform or to the GPU, allows it for
+itself and gets a decision record.
 
-`tools/check.sh` runs every check CI runs. The three rules no compiler
-knows are small scripts beside it: no dashes, dependencies on the allow
-list, and at most one line of test for two lines of code.
+`tools/check.sh` runs the checks of CI's main job: formatting, clippy, the
+tests, the documentation build and three rules no compiler knows, each a
+small script beside it: no dashes, dependencies on the allow list, and at
+most one line of test for two lines of code. CI also runs the tests on
+Windows and macOS, runs `cargo mutants` on what a push changed, and looks
+for known vulnerabilities.

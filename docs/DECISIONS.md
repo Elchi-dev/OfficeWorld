@@ -8,14 +8,15 @@ last.
 Docs, Sheets, Slides, Design, Board and PDF are views of the same model,
 drawn by the same engine.
 
-The suites this competes with are separate programs that exchange
-pictures and copies of each other's content. One model makes content live
-across apps, gives every app the same history, comments and merging, and
-means text layout, tables and colour are written once.
+In the classic suites a document belongs to one program, and content
+from another program sits in it as a linked or embedded object of that
+other program. One model makes content live across apps, gives every app
+the same history, comments and merging, and means text layout, tables and
+colour are written once.
 
 Rejected: one program per kind of document, sharing libraries. It is how
-the existing suites are built, and it is why a chart in a report goes
-stale.
+the classic suites are built, and it is why a chart in a report is a link
+to be refreshed and not the numbers themselves.
 
 The cost: the model has to be good enough for a novel, a sheet with a
 million cells and a poster at once. It is the hardest design in the
@@ -72,9 +73,12 @@ themselves, layout, the formula engine.
 A dependency is for something large and subtle that a maintained library
 does better: access to the GPU, windows and their events, font shaping,
 image codecs, TLS and cryptography, the bridge to each platform's
-accessibility interface. Each one is named with its reason in
-`tools/allowed-deps.txt`, and CI refuses any other. Which library fills
-each of those places is decided when the part that needs it is built.
+accessibility interface. Every crate a manifest names is listed with its
+reason in `tools/allowed-deps.txt`, and CI refuses any other, as it
+refuses one taken from git or from a path outside the repository. What an
+allowed crate depends on in turn comes with the decision to allow it.
+Which library fills each of those places is decided when the part that
+needs it is built.
 
 Today the list is empty.
 
@@ -95,9 +99,11 @@ What carries the weight instead:
   worked out apart from the code.
 - A test is named after what it protects and says in a comment what goes
   wrong without it.
-- A test has been seen failing. Before it is kept, the code it protects
-  is broken on purpose, and a test that does not notice is rewritten or
-  removed.
+- A test has to notice when the code is wrong. `cargo mutants` breaks the
+  code on purpose, one small change at a time, and has to end without a
+  change the tests let through. A change that no test can notice is listed
+  with its reason in `.cargo/mutants.toml`. CI runs this on what every
+  push touched.
 - Where a format has thousands of real files, the files are the test: a
   small harness over a large corpus. The corpus is data and does not count
   as test code.
@@ -127,8 +133,9 @@ published it becomes Apache 2.0.
 - **Licensor:** Elchi.
 - **Additional use grant:** production use is allowed as long as the
   licensee does not sell OfficeWorld: not the work, not a changed version,
-  not access to it as a service, not a product whose value is mostly
-  OfficeWorld. Charging for documents made with it is not selling it.
+  not access to it as a service, not a product or service whose value
+  comes entirely or substantially from it. Charging for documents made
+  with it is not selling it.
 - **Change date:** four years after a version is published, the longest
   the licence allows.
 - **Change licence:** Apache 2.0.
@@ -138,18 +145,33 @@ it is usable. Rejected: AGPL. A host could still sell it as a service by
 publishing its changes. Rejected: a licence that only lets people look at
 the source. Nobody could use the product.
 
-Two things to know. The licence's own terms always allow passing the
-source on, with the licence attached: what it withholds from someone who
-sells OfficeWorld is the right to use it in production. And contributions
-from outside need an agreement that lets the licensor grant commercial
-licences for them. That agreement is not written yet, and until it is, no
-outside code is merged.
+What the licence does and does not do. Its own terms always allow
+passing the source on, with the licence attached, and they say nothing
+about a price. What it withholds from someone who sells OfficeWorld is
+the right to use it in production. So it stops a company from running
+OfficeWorld as a paid service. It does not by its wording stop someone
+from selling copies without using them.
+
+Still open:
+
+- Whether the grant should also withhold production use from whoever
+  bought a copy from such a seller, which would close that gap.
+- Who the licensor is as a legal person. The file names a handle.
+- What counts as a version before there is a release.
+- Where "substantially" begins: paid support, training or hosting of a
+  company's own installation are not clearly on either side.
+
+Contributions from outside need an agreement that lets the licensor grant
+commercial licences for them. That agreement is not written yet, and
+until it is, no outside code is merged.
 
 ## A pinned toolchain and strict lints
 
 `rust-toolchain.toml` pins the compiler, so CI and every machine build
-with the same one. The workspace turns clippy's pedantic set into errors,
+with the same one. The workspace switches on clippy's pedantic set,
 refuses `unwrap` and `expect` outside tests, wants every public item
-documented and forbids unsafe code. A crate that needs unsafe code, such
-as the one that talks to the platform, says so in its own manifest and
-gets a record here.
+documented and denies unsafe code, and the checks treat every warning as
+an error. A module that needs unsafe code, such as the one that talks to
+the platform, allows it for itself and gets a record here. The lint is
+denied and not forbidden because a forbidden lint cannot be allowed again
+anywhere below, which would leave such a module no way in.
