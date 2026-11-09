@@ -12,9 +12,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request replaces the run of the older one. On main
+# every commit is its own group, so each keeps its own result: a run that is
+# cancelled shows on its commit as a failure.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
