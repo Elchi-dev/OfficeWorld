@@ -244,7 +244,7 @@ what is on paper come from one description.
 **The interface** is a tree of widgets that OfficeWorld lays out, draws
 and animates itself. It is built for documents first: a page of text, a
 grid of a million cells and a canvas are its normal case, not a special
-widget.
+widget. Its design is in [INTERFACE](INTERFACE.md).
 
 **Text layout** turns characters, fonts and a width into lines and pages.
 It is the largest single part of the engine, and the part where "almost
