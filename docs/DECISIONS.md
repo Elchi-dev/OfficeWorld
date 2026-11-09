@@ -70,17 +70,50 @@ A piece that is small and well specified is written here, with tests
 against its specification: the zip container, XML, the office formats
 themselves, layout, the formula engine.
 
-A dependency is for something large and subtle that a maintained library
-does better: access to the GPU, windows and their events, font shaping,
-image codecs, TLS and cryptography, the bridge to each platform's
-accessibility interface. Every crate a manifest names is listed with its
+A dependency is for something that must not be written twice in the
+world: TLS and cryptography above all, where a library that many people
+have attacked is worth more than any code that is merely correct as far
+as its author knows. Every crate a manifest names is listed with its
 reason in `tools/allowed-deps.txt`, and CI refuses any other, as it
 refuses one taken from git or from a path outside the repository. What an
 allowed crate depends on in turn comes with the decision to allow it.
-Which library fills each of those places is decided when the part that
-needs it is built.
+
+This section first named more places for a dependency: windows and their
+events, image codecs, font files. Each was decided the other way when its
+turn came, and is written here. Compression, PNG, ZIP, XML and font files
+are small enough and specified well enough to be checked against other
+programs. Windows are the next section.
 
 Today the list is empty.
+
+## The platform layer is written here
+
+The code that opens a window, takes input and puts a picture on the
+screen is written in this repository, for each system: X11 and Wayland,
+Win32, AppKit.
+
+Rejected: the crates most Rust programs use for this. They are good, and
+they would have put a window on all three systems within days. They also
+bring 202 packages into the lock file, 76 of them on Linux alone, into a
+project whose list of dependencies is empty, and they decide how events
+are ordered and when a frame is due, which is the part of the feel that
+sits closest to the hand.
+
+The cost is known and is paid here:
+
+- It is slower to a first window on every system.
+- Windows and macOS are reached through their C interfaces, which takes
+  unsafe code. The workspace denies it, so each such module allows it for
+  itself, is kept as small as the system's interface allows, and is
+  listed here when it exists. X11 is a protocol on a socket and needs
+  none.
+- Only X11 can be looked at where the code is written. The other systems
+  are run by CI, and by a person before anything is called done.
+- Input methods, drag and drop, clipboard formats and accessibility
+  bridges are the long tail of this decision, per system.
+
+The order: X11 first, because a window there can be seen and screenshots
+compared, then the system the first person who judges the feel sits at.
 
 ## At most one line of test for two lines of code
 
