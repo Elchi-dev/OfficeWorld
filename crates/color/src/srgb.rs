@@ -123,7 +123,8 @@ impl Color {
     ///
     /// That is how CSS and the office formats blend the stops of a
     /// gradient, so it is what a file's gradient has to be drawn with. For
-    /// a blend that looks even to the eye, mix in a space made for that.
+    /// a blend that looks even to the eye, mix in
+    /// [`Oklab`](crate::Oklab).
     #[must_use]
     pub fn mix(self, other: Self, t: f32) -> Self {
         let part = |from: f32, to: f32| from + (to - from) * t;
