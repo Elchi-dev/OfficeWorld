@@ -6,8 +6,10 @@
 //! It draws nothing itself.
 
 mod arc;
+mod flatten;
 mod path;
 mod svg;
 
+pub use flatten::Polyline;
 pub use path::{Element, Path, Piece, Segment};
 pub use svg::InvalidPathData;
