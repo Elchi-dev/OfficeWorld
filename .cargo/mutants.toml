@@ -17,4 +17,10 @@ exclude_re = [
     # edge of the bracket all end in the same answer.
     'replace < with <= in CubicBezier::parameter_at',
     'replace > with >= in CubicBezier::parameter_at',
+
+    # The corner of a stroke where the path does not turn to either side:
+    # it runs straight on, where the corner has no area, or straight back,
+    # where both sides are outside and a half turn around the end covers
+    # them whichever side it is begun from.
+    'replace > with >= in Pen<.+>::join',
 ]

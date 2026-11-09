@@ -10,9 +10,11 @@ mod flatten;
 mod measure;
 mod path;
 mod shapes;
+mod stroke;
 mod svg;
 
 pub use flatten::Polyline;
 pub use measure::FillRule;
 pub use path::{Element, Path, Piece, Segment};
+pub use stroke::{Cap, Join, Stroke};
 pub use svg::InvalidPathData;
