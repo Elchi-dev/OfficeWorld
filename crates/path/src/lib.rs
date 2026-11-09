@@ -9,6 +9,7 @@ mod arc;
 mod flatten;
 mod measure;
 mod path;
+mod shapes;
 mod svg;
 
 pub use flatten::Polyline;
