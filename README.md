@@ -109,15 +109,15 @@ Everything else follows from that:
 | Part | What it is | State |
 | --- | --- | --- |
 | [`crates/motion`](crates/motion) | springs solved in closed form, easing curves, tweens, values that animate and can change target mid-flight | built |
-| Design system | colour, type, spacing and the motion vocabulary every app shares | phase 1 |
-| Interface | the GPU renderer, layout, widgets, input and accessibility | phase 1 |
-| Engine | text layout, the canvas, the document model with history and merging | phase 2 |
-| Formats | .docx, .xlsx, .pptx and OpenDocument, with the fidelity measurement | phase 2 |
-| Docs, Sheets | the word processor and the spreadsheet | phase 3 |
-| Slides, Design, Board | presentations, layouts for print and screen, whiteboards and diagrams | phase 4 |
-| PDF | read, annotate, fill in, sign, edit, merge | phase 5 |
-| Sync, Drive, Forms | the server you can host yourself, shared files, working together in real time, surveys that feed a sheet | phase 6 |
-| Mail, Calendar, Contacts | clients for the standard protocols | phase 7 |
+| Design system | colour, type, spacing and the motion vocabulary every app shares | phase&nbsp;1 |
+| Interface | the GPU renderer, layout, widgets, input and accessibility | phase&nbsp;1 |
+| Engine | text layout, the canvas, the document model with history and merging | phase&nbsp;2 |
+| Formats | .docx, .xlsx, .pptx and OpenDocument, with the fidelity measurement | phase&nbsp;2 |
+| Docs, Sheets | the word processor and the spreadsheet | phase&nbsp;3 |
+| Slides, Design, Board | presentations, layouts for print and screen, whiteboards and diagrams | phase&nbsp;4 |
+| PDF | read, annotate, fill in, sign, edit, merge | phase&nbsp;5 |
+| Sync, Drive, Forms | the server you can host yourself, shared files, working together in real time, surveys that feed a sheet | phase&nbsp;6 |
+| Mail, Calendar, Contacts | clients for the standard protocols | phase&nbsp;7 |
 
 ---
 
