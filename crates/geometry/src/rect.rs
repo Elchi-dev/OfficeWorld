@@ -141,6 +141,19 @@ impl Rect {
         )
     }
 
+    /// The smallest rectangle that holds this one and a point. Unlike a
+    /// union with a rectangle that covers nothing, a point always counts:
+    /// that is what measuring the reach of a row of points needs.
+    #[must_use]
+    pub fn including(self, point: Point) -> Self {
+        Self::new(
+            self.x0.min(point.x),
+            self.y0.min(point.y),
+            self.x1.max(point.x),
+            self.y1.max(point.y),
+        )
+    }
+
     /// The rectangle with its edges moved inwards by the insets. Negative
     /// insets move them outwards.
     #[must_use]
@@ -328,6 +341,10 @@ mod tests {
         // repaint towards the corner it happens to sit in.
         let nothing = Rect::new(500.0, 500.0, 500.0, 900.0);
         assert_eq!((BOX.union(nothing), nothing.union(BOX)), (BOX, BOX));
+        let stretched = BOX.including(Point::new(0.0, 10.0));
+        assert_eq!(stretched, Rect::new(0.0, 10.0, 40.0, 60.0));
+        let stretched = BOX.including(Point::new(50.0, 70.0));
+        assert_eq!(stretched, Rect::new(10.0, 20.0, 50.0, 70.0));
         assert!(Rect::new(5.0, 5.0, 1.0, 9.0).is_empty() && !BOX.is_empty());
         assert!(Size::new(f64::NAN, 1.0).is_empty() && Size::new(1.0, 0.0).is_empty());
     }

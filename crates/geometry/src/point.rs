@@ -107,6 +107,14 @@ impl Vector {
     }
 }
 
+impl From<(f64, f64)> for Point {
+    /// A pair of numbers read as a point: across, then down. It lets a call
+    /// that takes a point be written `line_to((40.0, 12.5))`.
+    fn from((x, y): (f64, f64)) -> Self {
+        Self::new(x, y)
+    }
+}
+
 impl Sub for Point {
     type Output = Vector;
 
@@ -237,6 +245,7 @@ mod tests {
             (5.0, 25.0, 5.0)
         );
         assert_eq!(a.lerp(b, 0.25), Point::new(1.75, 3.0));
+        assert_eq!(Point::from((4.0, 6.0)), b);
         assert_eq!(way + way - way * 3.0, -way);
         assert_eq!((way / 2.0).to_point(), Point::new(1.5, 2.0));
 
