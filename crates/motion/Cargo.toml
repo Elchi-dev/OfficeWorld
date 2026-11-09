@@ -1,0 +1,13 @@
+[package]
+name = "ow-motion"
+description = "Motion for OfficeWorld: springs solved in closed form, easing curves and values that animate."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
