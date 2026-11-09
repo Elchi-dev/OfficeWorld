@@ -6,5 +6,7 @@
 //! against.
 
 mod mask;
+mod pixmap;
 
 pub use mask::Mask;
+pub use pixmap::{Pixmap, TooLarge};
