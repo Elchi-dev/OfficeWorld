@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/color",
+    "crates/design",
     "crates/flate",
     "crates/geometry",
     "crates/motion",

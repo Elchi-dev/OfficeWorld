@@ -1,0 +1,17 @@
+[package]
+name = "ow-design"
+description = "The design system of OfficeWorld: colour ramps with guaranteed contrast, sizes, and the motion every part shares."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ow-color = { path = "../color" }
+ow-motion = { path = "../motion" }
+
+[lints]
+workspace = true

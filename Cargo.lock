@@ -10,6 +10,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ow-design"
+version = "0.0.0"
+dependencies = [
+ "ow-color",
+ "ow-motion",
+]
+
+[[package]]
 name = "ow-flate"
 version = "0.0.0"
 
