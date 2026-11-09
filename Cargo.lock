@@ -40,6 +40,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ow-platform"
+version = "0.0.0"
+
+[[package]]
 name = "ow-raster"
 version = "0.0.0"
 dependencies = [

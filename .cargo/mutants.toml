@@ -5,6 +5,14 @@
 # tests let through gets a test, or a line here that says why it changes
 # nothing a caller can see.
 
+# Code for a system other than the one the mutation run happens on. It is
+# not built there, so no change to it can fail a test there. Such code is
+# tested by its own tests on its own system.
+exclude_globs = [
+    "crates/platform/src/win32/**",
+    "crates/platform/src/appkit/**",
+]
+
 exclude_re = [
     # The zero of a number, a point, a size or a rectangle is what
     # Default::default() gives for it.

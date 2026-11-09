@@ -1,0 +1,13 @@
+[package]
+name = "ow-platform"
+description = "The platform layer of OfficeWorld: windows, input and putting a picture on the screen, written for each system."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

@@ -7,6 +7,7 @@ members = [
     "crates/geometry",
     "crates/motion",
     "crates/path",
+    "crates/platform",
     "crates/raster",
 ]
 
