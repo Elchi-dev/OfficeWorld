@@ -26,3 +26,12 @@ version = "0.0.0"
 dependencies = [
  "ow-geometry",
 ]
+
+[[package]]
+name = "ow-raster"
+version = "0.0.0"
+dependencies = [
+ "ow-color",
+ "ow-geometry",
+ "ow-path",
+]

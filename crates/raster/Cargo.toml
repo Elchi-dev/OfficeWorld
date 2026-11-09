@@ -1,0 +1,18 @@
+[package]
+name = "ow-raster"
+description = "Drawing for OfficeWorld on the CPU: paths filled exactly into pictures, the reference every other renderer is measured against."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ow-color = { path = "../color" }
+ow-geometry = { path = "../geometry" }
+ow-path = { path = "../path" }
+
+[lints]
+workspace = true

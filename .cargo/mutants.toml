@@ -23,4 +23,9 @@ exclude_re = [
     # where both sides are outside and a half turn around the end covers
     # them whichever side it is begun from.
     'replace > with >= in Pen<.+>::join',
+
+    # Summing the parts of a row with the other sign. A fill rule asks how
+    # often a shape winds around a pixel and not which way round, so the
+    # coverage is the same.
+    'replace \+= with -= in Cells::coverage',
 ]
