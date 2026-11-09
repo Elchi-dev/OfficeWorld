@@ -130,7 +130,7 @@ Anyone may use OfficeWorld, read its source, change it and pass it on.
 Selling it takes a commercial licence. Four years after a version is
 published it becomes Apache 2.0.
 
-- **Licensor:** Elchi.
+- **Licensor:** Elchi Studios.
 - **Additional use grant:** production use is allowed as long as the
   licensee does not sell OfficeWorld: not the work, not a changed version,
   not access to it as a service, not a product or service whose value
@@ -152,11 +152,13 @@ the right to use it in production. So it stops a company from running
 OfficeWorld as a paid service. It does not by its wording stop someone
 from selling copies without using them.
 
+That gap was looked at and left. Closing it would mean a grant that also
+withholds production use from whoever bought a copy from such a seller,
+and with it a licence that is no longer the Business Source License
+people know. The plain licence was chosen.
+
 Still open:
 
-- Whether the grant should also withhold production use from whoever
-  bought a copy from such a seller, which would close that gap.
-- Who the licensor is as a legal person. The file names a handle.
 - What counts as a version before there is a release.
 - Where "substantially" begins: paid support, training or hosting of a
   company's own installation are not clearly on either side.
