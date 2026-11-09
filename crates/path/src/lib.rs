@@ -7,9 +7,11 @@
 
 mod arc;
 mod flatten;
+mod measure;
 mod path;
 mod svg;
 
 pub use flatten::Polyline;
+pub use measure::FillRule;
 pub use path::{Element, Path, Piece, Segment};
 pub use svg::InvalidPathData;
