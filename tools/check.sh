@@ -16,6 +16,9 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 step "Tests"
 cargo test --workspace --locked
 
+step "Compression that zlib reads, and zlib's that is read here"
+python3 -I tools/check_flate.py
+
 step "Documentation"
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked --quiet
 
