@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/color", "crates/geometry", "crates/motion"]
+members = ["crates/color", "crates/geometry", "crates/motion", "crates/path"]
 
 [workspace.package]
 version = "0.0.0"
