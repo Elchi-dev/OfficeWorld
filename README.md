@@ -24,8 +24,8 @@
 ## Overview
 
 > **OfficeWorld is at the very beginning, and most of this page describes
-> a plan.** What exists today is the foundation of how it moves: springs
-> solved in closed form, easing curves and values that animate. There is no
+> a plan.** What exists today is the bottom of the stack: how things move,
+> and the geometry, colour and paths that drawing is made of. There is no
 > editor, no window and nothing to open a file with yet.
 > [ROADMAP](docs/ROADMAP.md) says what is finished.
 
@@ -112,6 +112,9 @@ Everything else follows from that:
 | Part | What it is | State |
 | --- | --- | --- |
 | [`crates/motion`](crates/motion) | springs solved in closed form, easing curves, tweens, values that animate and can change target mid-flight | built |
+| [`crates/geometry`](crates/geometry) | points, vectors, rectangles, rounded rectangles and affine transforms, in 64-bit coordinates | built |
+| [`crates/color`](crates/color) | sRGB with hex notation, layering and contrast, and Oklab for mixing, palettes and gamut mapping | built |
+| [`crates/path`](crates/path) | lines, curves and arcs, SVG path data read and written, flattening, bounds, areas, hit testing and strokes | built |
 | Design system | colour, type, spacing and the motion vocabulary every app shares | phase&nbsp;1 |
 | Interface | the GPU renderer, layout, widgets, input and accessibility | phase&nbsp;1 |
 | Engine | text layout, the canvas, the document model with history and merging | phase&nbsp;2 |
@@ -136,7 +139,7 @@ cd OfficeWorld
 python3 tools/stats.py    # lines of code and of test per crate
 ```
 
-What there is to look at today is the motion crate:
+What there is to look at today is code. How a panel moves:
 
 ```rust
 use ow_motion::{Animated, Spring};
@@ -150,6 +153,20 @@ width.set_target(240.0, 10.1);
 
 // Where it is at any time, on any screen, however many frames were drawn.
 let now = width.value(10.15);
+```
+
+And what an icon is made of:
+
+```rust
+use ow_path::{Cap, FillRule, Path, Stroke};
+
+// A tick, as SVG path data, drawn with a round pen two wide.
+let tick: Path = "M4 12 L10 18 L20 6".parse()?;
+let pen = Stroke::new(2.0).with_cap(Cap::Round);
+let shape = tick.stroke(pen, 0.05);
+
+// The shape is what gets filled, and what a click is tested against.
+assert!(shape.contains((10.0, 18.5), FillRule::NonZero, 0.05));
 ```
 
 ---
@@ -188,7 +205,8 @@ In the order it gets built. The reasons for the order are in
 
 ## Status
 
-**Phase 1 has begun.** The motion crate is built. Nothing else is.
+**Phase 1 has begun.** Four crates are built: motion, geometry, colour
+and paths. Nothing of it can be seen on a screen yet.
 
 Next to the suites named at the top, OfficeWorld is better at nothing
 today: they exist. What can be judged already is how it is built:
@@ -205,8 +223,10 @@ today: they exist. What can be judged already is how it is built:
   for everything a push touches.
 - **Checked against the definition.** The spring solution is put back into
   the differential equation it claims to solve. The easing solver is
-  compared with the curve as it is drawn. The CSS curves are compared with
-  values worked out in exact fractions.
+  compared with the curve as it is drawn. The colour conversions are
+  compared with the numbers the CSS specification gives. A stroke with a
+  round pen has to cover exactly the points within half its width of the
+  path, measured point by point.
 - **Three systems.** The tests run on Linux, Windows and macOS on every
   push.
 

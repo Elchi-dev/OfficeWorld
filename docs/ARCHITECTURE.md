@@ -1,9 +1,9 @@
 # Architecture
 
-How OfficeWorld is put together. One part is built: the motion crate. The
-rest of this page is the plan the code is written towards. It changes when
-building a part teaches something, and each part gets its own section here
-once it exists.
+How OfficeWorld is put together. Four parts are built: motion, geometry,
+colour and paths. The rest of this page is the plan the code is written
+towards. It changes when building a part teaches something, and each part
+gets its own section here once it exists.
 
 ## The layers
 
@@ -27,7 +27,8 @@ once it exists.
 ```
 
 A layer uses the layers below it and knows nothing of the ones above.
-Only motion is built today.
+What is built today sits at the bottom: motion, and what the renderer will
+draw with.
 
 ## Rules that hold in every layer
 
@@ -109,7 +110,81 @@ finite.
 
 **`Animatable`** is what a value needs for all of this: adding, scaling
 and a length. It is implemented for `f32`, `f64` and arrays of them, and
-the geometry and colour crates will implement it for their types.
+the geometry and colour crates implement it for their types.
+
+## Geometry
+
+`crates/geometry`, package `ow-geometry`. It depends on motion alone, for
+`Animatable`.
+
+Coordinates are `f64`, x to the right and y downwards, as on a screen and
+on a page. A sheet can be a million rows tall, and that far from the
+origin an `f32` no longer tells two neighbouring pixels apart.
+
+A `Point` is a place and a `Vector` is the way from one place to another.
+They are two types, so the compiler catches an offset used as a place. A
+`Rect` is stored as its four edges and is half open: its left and its top
+edge belong to it, its right and its bottom edge do not. Two cells side by
+side share an edge and no point, so a click on the line between them lands
+in exactly one. A `RoundedRect` fits radii that are too large for it the
+way CSS does. `Affine` is the matrix that CSS, SVG and PDF write as
+`matrix(a, b, c, d, e, f)`.
+
+Points, vectors, sizes and rectangles can be moved by a spring.
+
+## Colour
+
+`crates/color`, package `ow-color`. It depends on motion alone.
+
+`Color` is what files and screens speak: sRGB, with alpha kept apart from
+the colour. It reads hexadecimal notation, lays one colour over another,
+and measures luminance and contrast the way the accessibility guidelines
+(WCAG) define them.
+
+`Oklab` is the space colours are mixed in. In sRGB a blend from blue to
+yellow passes through grey, and equal steps do not look equal. Oklab was
+made so that they do. Its polar form, lightness, chroma and hue, is what
+palettes are built from. A colour that no screen can show is brought back
+by lowering its chroma, which keeps its lightness and its hue. The numbers
+are checked against the ones the CSS Color specification gives.
+
+## Paths
+
+`crates/path`, package `ow-path`. It depends on geometry alone.
+
+A `Path` is an outline of straight lines and of quadratic and cubic Bézier
+curves, in one or more pieces: the shape of a letter, the line of a chart,
+the border of a cell. The crate draws nothing. It builds paths, measures
+them and turns them into the simpler shapes that drawing needs.
+
+**Building.** A path is built step by step, with the rules an HTML canvas
+has for it. It is read from SVG path data, every command of it, and that
+is also how it prints. Or it is one of the shapes: a rectangle, a rounded
+rectangle, an ellipse, a polygon. An arc of an ellipse becomes one cubic
+curve for each quarter turn, which strays from the ellipse by less than
+three ten-thousandths of its radius.
+
+**Flattening.** Drawing and measuring work on straight lines. A curve is
+cut into equal steps, as many as Wang's formula asks for: from how fast
+the curve changes direction it bounds how far the curve can stray from its
+chords. The bound is never too low, so the lines stay within the tolerance
+they were asked for.
+
+**Measuring.** Bounds are tight: they come from where the curve turns
+around, not from its control points. The area is exact, computed on the
+curves themselves. Whether a point is inside is decided by how often the
+path winds around it, under either fill rule, and an edge belongs to a
+shape exactly as it belongs to a `Rect`.
+
+**Strokes.** The stroke of a path is not one outline. It is many convex
+pieces that all run the same way round: a four-sided piece for each line,
+a fan for the outside of each corner, a cap for each end. Filled by the
+non-zero rule, pieces that overlap add up, and nothing can cancel anything
+else out. The usual construction, two offset curves joined into one
+outline, has to get the inside of tight curves right, where the offset
+doubles back over itself, and leaves holes when it does not. The test is
+the definition of a stroke: with a round pen, a point is covered exactly
+when it lies within half the pen's width of the path.
 
 ## Planned parts
 

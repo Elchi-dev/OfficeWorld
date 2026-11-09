@@ -16,11 +16,17 @@ Done:
 
 - **Motion.** Springs solved in closed form, easing curves, tweens, and
   values that can be given a new target mid-flight.
+- **Geometry and colour.** Points, rectangles, rounded rectangles and
+  transforms. sRGB as files and screens speak it, and Oklab to mix in.
+- **Paths.** Lines, curves and arcs, built step by step or read from SVG
+  path data. Flattening, tight bounds, exact areas, what is inside, and
+  strokes with their joins and ends.
 
 Open:
 
-- **Geometry and colour.** Points, rectangles, transforms, and colour
-  spaces that blend correctly.
+- **A reference renderer.** Paths filled on the CPU, into pictures that
+  can be looked at and compared. The renderer on the GPU is measured
+  against it.
 - **The design system.** Colour, type, spacing and the motion vocabulary
   as tokens every app shares.
 - **The renderer.** Shapes, images and text on the GPU, in a window on
