@@ -1,10 +1,8 @@
 # Architecture
 
-How OfficeWorld is put together. Six parts are built: motion, geometry,
-colour, paths, the reference renderer and compression. The rest of this
-page is the plan the code is written
-towards. It changes when building a part teaches something, and each part
-gets its own section here once it exists.
+How OfficeWorld is put together. Each part that is built has a section
+of its own below. The rest of this page is the plan the code is written
+towards. It changes when building a part teaches something.
 
 ## The layers
 
@@ -28,8 +26,8 @@ gets its own section here once it exists.
 ```
 
 A layer uses the layers below it and knows nothing of the ones above.
-What is built today sits at the bottom: motion, and what the renderer will
-draw with.
+What is built today sits at the bottom: motion, what the renderer draws
+with, and the interface every system's window layer has to fill.
 
 ## Rules that hold in every layer
 
@@ -234,10 +232,84 @@ run of the checks. Readers for the formats above this one follow the same
 rule: an interoperability check against a program that was not written
 here.
 
+## The design system
+
+`crates/design`, package `ow-design`. It depends on colour and motion and
+draws nothing. It is the numbers every part of the interface takes its
+look from, so that no part has a colour, a size or a spring of its own.
+
+**Ramps.** A tint is a hue, how colourful it is and how light its solid
+colour is. From a tint and a scheme, light or dark, a ramp of thirteen
+colours is worked out in Oklab: the backdrop and the surface, three fills
+for a control at rest, under the pointer and pressed, three lines, the
+solid colour, the same under the pointer and the colour of what stands on
+it, and two colours for text. Ramps of different hues have the same steps
+of lightness, so they look like one family. A colour that has to be read
+on another is moved along its lightness until it has the contrast the
+accessibility guidelines ask for, so a tint cannot be chosen that gives
+text nobody can read.
+
+**Metrics.** Spacing, corner radii, the heights of controls and six
+styles of type, on one scale and in one unit, which is a pixel on a screen
+of ordinary density.
+
+**Motion.** Three springs and a fade that everything moves with: a quick
+one that is there in a fifth of a second, a smooth one for what is large
+or travels far, and a lively one that passes its target once. A second
+set is for people who asked their system for less motion: nothing swings
+and nothing travels visibly.
+
+Not built: the choice of fonts, icons, shadows, and the styles of the
+single controls.
+
+## The platform
+
+`crates/platform`, package `ow-platform`. No dependencies. It is what a
+program needs from the system it runs on: windows, the pointer and the
+keyboard, the clipboard, the moment to draw the next frame, and a way to
+put a picture into a window.
+
+A program implements `App` and is handed every event as it happens. It
+asks for what it wants through `Platform`: open a window, show this
+picture, tell me when the next frame is due, wake me at this time. It
+does not loop and it does not read a clock. That is what lets a screen at
+any refresh rate drive it, and a test.
+
+`Headless` is a platform without a screen. A test sends the events, lets
+frames pass at any rate, and reads the pictures that were shown. Every
+layer above this one is tested on it.
+
+The layers for real systems are written here as well, each speaking its
+system's own protocol or interface, and none of them is built: X11 and
+Wayland on Linux, Win32 on Windows, AppKit on macOS. `run` says so. Why
+they are written here and not taken from a library is in
+[DECISIONS](DECISIONS.md).
+
+## Scenes
+
+`crates/scene`, package `ow-scene`. It depends on geometry, colour, paths
+and the reference renderer.
+
+A `Scene` is what a frame looks like, as data: paths that are filled or
+drawn along with a pen, in order, later ones over earlier ones. An item
+can also be another scene, placed by a transform, cut off at a clip and
+faded. Such a scene is shared and not copied, which is what lets the
+interface keep most of a window from one frame to the next: a list that
+scrolls is the same scene as before, placed somewhere else.
+
+A scene knows a rectangle nothing in it reaches out of, so a renderer can
+skip what lies outside the part of a window it redraws.
+
+The interface builds scenes and never draws. Drawing is one way to read a
+scene, and `Scene::draw` does it with the reference renderer. Writing it
+into a PDF is another, and a test reads it as it is.
+
+Not built: gradients and pictures as a fill, pictures and text as items.
+Drawing does not yet cut a group off at its clip or fade it.
+
 ## Planned parts
 
-**The renderer** takes a scene, which is a list of shapes, images and runs
-of text with transforms and clips, and draws it on the GPU. The same scene
+**The renderer** takes a scene and draws it on the GPU. The same scene
 can be written to a PDF or sent to a printer, so what is on screen and
 what is on paper come from one description.
 

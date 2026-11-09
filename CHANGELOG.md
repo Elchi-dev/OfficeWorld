@@ -55,6 +55,24 @@
   - Deflate packed, in one block with the fixed codes.
   - The zlib wrapping in both directions, and the CRC-32 and Adler-32
     checksums.
+- The design system's numbers, `ow-design`:
+  - `Ramp`: thirteen colours worked out in Oklab from a `Tint` and a
+    scheme, light or dark, with eight tints to start from.
+  - Spacing, radii, the heights of controls and six styles of type.
+  - `Motion`: the three springs and the fade everything moves with, and
+    a second set for people who asked their system for less motion.
+- `Spring::preset`, so that a spring can be written as a constant.
+- The platform interface, `ow-platform`:
+  - `App`, `Platform` and the events between them: windows, the pointer,
+    the keyboard, scrolling, frames, the clipboard, and being woken at a
+    time or from another thread.
+  - `Headless`: a platform without a screen, which a test drives.
+  - The layers for X11, Wayland, Windows and macOS are not built.
+- Scenes, `ow-scene`: what a frame looks like as data. Filled and
+  stroked paths in order, other scenes placed among them by a transform
+  with a clip and an opacity, and a rectangle nothing in the scene
+  reaches out of. Drawn with the reference renderer, so far without the
+  clip and the opacity.
 - `tools/check.sh` with the three project rules: no dashes, dependencies
   on an allow list, at most one line of test for two lines of code.
 - CI: every check on Linux, the tests on Windows and macOS, mutation
@@ -86,7 +104,7 @@ Found by a review after the first push, before any release.
 
 ### Verified
 
-- 79 tests and 10 checked examples pass on Linux, Windows and macOS.
+- 93 tests and 13 checked examples pass on Linux, Windows and macOS.
 - The spring solution is put back into its differential equation, with
   its derivatives measured across a short step, for 8 springs across all
   three regimes, 3 starting states and 3 times each. Two of the springs
@@ -144,9 +162,28 @@ Found by a review after the first push, before any release.
   so that repeats of every length and from every distance occur. Each is
   packed here and unpacked by zlib, and packed by zlib in 20 ways, every
   strategy at four levels, and unpacked here.
-- `cargo mutants` (27.1.0) makes 1,862 small changes to the six crates.
-  202 do not compile, the tests catch 1,647, and the 13 that no test can
-  notice are listed with their reasons in `.cargo/mutants.toml`.
+- Every ramp, for 8 tints in both schemes, is measured against what its
+  fields promise: soft text at a contrast of 4.5 on three grounds, text
+  at 7 on two, what stands on the solid colour at 4.5, the strong line at
+  3 against the backdrop, and the soft text and the line no further from
+  the tint than that takes. Three ramps are compared, colour by colour,
+  with the same recipe written a second time in Python.
+- Each spring of the design system is followed through a second,
+  millisecond by millisecond: whether it passes its target and by how
+  much, and when it is within a hundredth of it for good.
+- On the platform without a screen, a program is sent frames exactly as
+  long as it asks for them, is woken at the time it named and from
+  another thread, and a window keeps the picture it was given until it
+  is closed.
+- A scene with a scene in a scene is drawn and compared, byte for byte,
+  with its parts placed and drawn by hand, on a screen with two pixels
+  to the unit and on one that is mirrored as well. The bounds of a
+  stroke are compared with what the pen really leaves, for four pens.
+- `cargo mutants` (27.1.0) makes 1,862 small changes to the first six
+  crates. 202 do not compile, the tests catch 1,647, and the 13 that no
+  test can notice are listed with their reasons in `.cargo/mutants.toml`.
+  The crates that came after are held to the same: none of the changes
+  that can be made to them gets past their tests.
 - Each rule check was seen refusing what it should: a file with an em
   dash or its HTML entity, a text file that is not UTF-8, a dependency
   that is not on the list, one from git, one from a path outside the

@@ -27,14 +27,22 @@ Done:
   covers. The renderer on the GPU will be measured against it.
 - **Compression.** Deflate and zlib in both directions, needed to write a
   picture to a file now and to open office files later.
+- **The design system as numbers.** A ramp of thirteen colours for any
+  tint, light and dark, with the contrast of its text guaranteed. Spacing,
+  radii, the sizes of controls and of type, and the springs everything
+  moves with.
+- **The platform interface.** What a program asks of the system it runs
+  on, and a platform without a screen that tests run on.
+- **Scenes.** What a frame looks like as data, which the interface builds
+  and a renderer draws.
 
 Open:
 
 - **Pictures as files.** PNG first, so that what is drawn can be looked
   at and compared.
 - **Gradients, pictures and text** in the reference renderer.
-- **The design system.** Colour, type, spacing and the motion vocabulary
-  as tokens every app shares.
+- **Windows.** The platform layers for X11, Wayland, Windows and macOS,
+  each written against its system's own protocol or interface.
 - **The renderer.** Shapes, images and text on the GPU, in a window on
   Windows, macOS and Linux and in a browser.
 - **Layout, widgets and input.** Pointer, keyboard, text input with input

@@ -26,8 +26,9 @@
 > **OfficeWorld is at the very beginning, and most of this page describes
 > a plan.** What exists today is the bottom of the stack: how things move,
 > the geometry, colour and paths that drawing is made of, a renderer that
-> fills them into a picture in memory, and compression. There is no editor,
-> no window and nothing to open a file with yet.
+> fills them into a picture in memory, compression, and the numbers of the
+> design system. There is no editor, no window and nothing to open a file
+> with yet.
 > [ROADMAP](docs/ROADMAP.md) says what is finished.
 
 Every office suite asks you to accept a trade.
@@ -118,7 +119,9 @@ Everything else follows from that:
 | [`crates/path`](crates/path) | lines, curves and arcs, SVG path data read and written, flattening, bounds, areas, hit testing and strokes | built |
 | [`crates/raster`](crates/raster) | the reference renderer on the CPU: the exact area of a shape in every pixel, pictures in memory, fill and stroke | built |
 | [`crates/flate`](crates/flate) | deflate and zlib, packed and unpacked, with the CRC-32 and Adler-32 checksums: what ZIP, PNG and PDF are made of | built |
-| Design system | colour, type, spacing and the motion vocabulary every app shares | phase&nbsp;1 |
+| [`crates/design`](crates/design) | the design system as numbers: a ramp of thirteen colours for any tint in light and dark with the contrast of its text guaranteed, spacing, sizes of type and the springs everything moves with | built |
+| [`crates/scene`](crates/scene) | what a frame looks like as data: shapes with their paints, placed, clipped and layered, for a renderer to draw | built |
+| [`crates/platform`](crates/platform) | what a program asks of its system: windows, pointer, keyboard, clipboard and frames, with a platform without a screen for tests. The layers for X11, Wayland, Windows and macOS are not built | interface built |
 | Interface | the GPU renderer, layout, widgets, input and accessibility | phase&nbsp;1 |
 | Engine | text layout, the canvas, the document model with history and merging | phase&nbsp;2 |
 | Formats | .docx, .xlsx, .pptx and OpenDocument, with the fidelity measurement | phase&nbsp;2 |
@@ -208,9 +211,10 @@ In the order it gets built. The reasons for the order are in
 
 ## Status
 
-**Phase 1 has begun.** Six crates are built: motion, geometry, colour,
-paths, the reference renderer and compression. Nothing of it can be seen
-on a screen yet.
+**Phase 1 has begun.** Nine crates are built: motion, geometry, colour,
+paths, the reference renderer, compression, the design system's numbers,
+scenes, and the interface the window layers of each system will fill.
+Nothing of it can be seen on a screen yet.
 
 Next to the suites named at the top, OfficeWorld is better at nothing
 today: they exist. What can be judged already is how it is built:
