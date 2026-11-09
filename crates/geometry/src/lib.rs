@@ -7,6 +7,8 @@
 
 mod point;
 mod rect;
+mod rounded;
 
 pub use point::{Point, Vector};
 pub use rect::{Insets, Rect, Size};
+pub use rounded::{Radii, RoundedRect};
