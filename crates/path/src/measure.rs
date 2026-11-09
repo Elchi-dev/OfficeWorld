@@ -38,10 +38,7 @@ impl Polyline {
     /// first. It is positive when the corners run clockwise on a screen and
     /// negative the other way round.
     pub fn area(&self) -> f64 {
-        let doubled: f64 = self
-            .joined(true)
-            .map(|(start, end)| cross(start, end))
-            .sum();
+        let doubled: f64 = self.edges().map(|(start, end)| cross(start, end)).sum();
         doubled / 2.0
     }
 
@@ -68,7 +65,7 @@ impl Polyline {
                 0
             }
         };
-        self.joined(true).map(crossing).sum()
+        self.edges().map(crossing).sum()
     }
 }
 

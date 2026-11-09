@@ -24,9 +24,14 @@ impl Polyline {
         self.joined(self.closed)
     }
 
-    /// The lines between the corners, with the one back to the first corner
-    /// when `closed` asks for it, whatever the polyline says itself.
-    pub(crate) fn joined(&self, closed: bool) -> impl Iterator<Item = (Point, Point)> + '_ {
+    /// The straight lines around what the polyline encloses: those between
+    /// its corners and the one back to its first corner, whether it is
+    /// closed or not. Filling and measuring an area work on these.
+    pub fn edges(&self) -> impl Iterator<Item = (Point, Point)> + '_ {
+        self.joined(true)
+    }
+
+    fn joined(&self, closed: bool) -> impl Iterator<Item = (Point, Point)> + '_ {
         let closing = self.points.first().filter(|_| closed);
         let ends = self.points.iter().skip(1).chain(closing);
         self.points.iter().copied().zip(ends.copied())
