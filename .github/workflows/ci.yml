@@ -56,6 +56,41 @@ jobs:
       - name: Tests
         run: cargo test --workspace --locked
 
+  mutants:
+    name: Mutation of what changed
+    # Pushes only: a push says which commit came before it, so the functions
+    # it changed are known.
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - name: Install cargo-mutants
+        run: cargo +stable install cargo-mutants --locked --version 27.1.0 --quiet
+
+      # Every function the push touched is changed in small ways, one at a
+      # time, and the tests have to notice each change. What they cannot
+      # notice is listed with its reason in .cargo/mutants.toml.
+      - name: Mutate what this push changed
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # A new branch, or a push that rewrote history, has no commit
+          # before it here. Then everything is mutated.
+          if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            git diff "$BEFORE" HEAD > "$RUNNER_TEMP/push.diff"
+            cargo mutants --in-diff "$RUNNER_TEMP/push.diff" --jobs 4
+          else
+            cargo mutants --jobs 4
+          fi
+
   audit:
     name: Known vulnerabilities
     runs-on: ubuntu-24.04

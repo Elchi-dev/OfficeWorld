@@ -1,0 +1,19 @@
+# Changes to the code that no test can notice, each with its reason.
+#
+# `cargo mutants` changes the code in small ways, one at a time, and runs the
+# tests on each change. It has to end without a missed one: a change the
+# tests let through gets a test, or a line here that says why it changes
+# nothing a caller can see.
+
+exclude_re = [
+    # 0.0 is what Default::default() gives for a float.
+    'replace <impl Animatable for f(32|64)>::zero -> Self with Default::default\(\)',
+
+    # The easing solver's comparisons, each moved onto its own boundary
+    # value. Stopping at an error of exactly 1e-14 and not just below it,
+    # calling an error of exactly zero too high when the solver has already
+    # returned for it, and taking a Newton guess that sits exactly on the
+    # edge of the bracket all end in the same answer.
+    'replace < with <= in CubicBezier::parameter_at',
+    'replace > with >= in CubicBezier::parameter_at',
+]
