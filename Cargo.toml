@@ -9,6 +9,7 @@ members = [
     "crates/path",
     "crates/platform",
     "crates/raster",
+    "crates/scene",
 ]
 
 [workspace.package]

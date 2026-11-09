@@ -1,0 +1,19 @@
+[package]
+name = "ow-scene"
+description = "What a frame of OfficeWorld looks like, as data: shapes with their paints, placed, clipped and layered, for any renderer to draw."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ow-color = { path = "../color" }
+ow-geometry = { path = "../geometry" }
+ow-path = { path = "../path" }
+ow-raster = { path = "../raster" }
+
+[lints]
+workspace = true

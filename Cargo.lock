@@ -51,3 +51,13 @@ dependencies = [
  "ow-geometry",
  "ow-path",
 ]
+
+[[package]]
+name = "ow-scene"
+version = "0.0.0"
+dependencies = [
+ "ow-color",
+ "ow-geometry",
+ "ow-path",
+ "ow-raster",
+]
