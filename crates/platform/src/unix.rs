@@ -32,9 +32,8 @@ mod tests {
     #[test]
     fn either_session_ends_at_the_layer_that_is_missing() {
         let x11 = Err(PlatformError::NotBuilt("X11"));
-        assert_eq!(
-            (run_on(true, &mut Idle), run_on(false, &mut Idle)),
-            (x11.clone(), x11)
-        );
+        let sessions = (run_on(true, &mut Idle), run_on(false, &mut Idle));
+        assert_eq!(sessions, (x11.clone(), x11.clone()));
+        assert_eq!(crate::run(&mut Idle), x11);
     }
 }

@@ -263,16 +263,8 @@ pub fn run(app: &mut dyn App) -> Result<(), PlatformError> {
 mod tests {
     use super::*;
 
-    struct Idle;
-
-    impl App for Idle {
-        fn event(&mut self, _platform: &mut dyn Platform, _event: Event) {}
-    }
-
     #[test]
-    fn a_system_whose_layer_is_not_built_says_so() {
-        let said = run(&mut Idle).unwrap_err();
-        assert!(matches!(said, PlatformError::NotBuilt(_)), "{said}");
+    fn an_error_says_what_went_wrong() {
         let errors = [
             PlatformError::NoDisplay("DISPLAY is not set.".to_owned()),
             PlatformError::Refused("no more windows".to_owned()),
