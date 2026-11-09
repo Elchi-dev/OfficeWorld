@@ -7,5 +7,8 @@
 //! checksums that travel with it.
 
 mod checksum;
+mod codes;
+mod inflate;
 
 pub use checksum::{Crc32, adler32};
+pub use inflate::{InflateError, inflate};
