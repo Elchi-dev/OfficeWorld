@@ -1,0 +1,8 @@
+# Crates from outside this workspace that a manifest may name.
+#
+# One per line: the crate's name, then the reason it is here. Small, well
+# specified pieces are written in this repository. A dependency is for
+# something large and subtle that a maintained library does better, and
+# docs/DECISIONS.md says which those are.
+#
+# The list is empty: nothing in the workspace depends on outside code yet.
