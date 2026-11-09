@@ -25,8 +25,9 @@
 
 > **OfficeWorld is at the very beginning, and most of this page describes
 > a plan.** What exists today is the bottom of the stack: how things move,
-> and the geometry, colour and paths that drawing is made of. There is no
-> editor, no window and nothing to open a file with yet.
+> the geometry, colour and paths that drawing is made of, a renderer that
+> fills them into a picture in memory, and compression. There is no editor,
+> no window and nothing to open a file with yet.
 > [ROADMAP](docs/ROADMAP.md) says what is finished.
 
 Every office suite asks you to accept a trade.
@@ -115,6 +116,8 @@ Everything else follows from that:
 | [`crates/geometry`](crates/geometry) | points, vectors, rectangles, rounded rectangles and affine transforms, in 64-bit coordinates | built |
 | [`crates/color`](crates/color) | sRGB with hex notation, layering and contrast, and Oklab for mixing, palettes and gamut mapping | built |
 | [`crates/path`](crates/path) | lines, curves and arcs, SVG path data read and written, flattening, bounds, areas, hit testing and strokes | built |
+| [`crates/raster`](crates/raster) | the reference renderer on the CPU: the exact area of a shape in every pixel, pictures in memory, fill and stroke | built |
+| [`crates/flate`](crates/flate) | deflate and zlib, packed and unpacked, with the CRC-32 and Adler-32 checksums: what ZIP, PNG and PDF are made of | built |
 | Design system | colour, type, spacing and the motion vocabulary every app shares | phase&nbsp;1 |
 | Interface | the GPU renderer, layout, widgets, input and accessibility | phase&nbsp;1 |
 | Engine | text layout, the canvas, the document model with history and merging | phase&nbsp;2 |
@@ -205,8 +208,9 @@ In the order it gets built. The reasons for the order are in
 
 ## Status
 
-**Phase 1 has begun.** Four crates are built: motion, geometry, colour
-and paths. Nothing of it can be seen on a screen yet.
+**Phase 1 has begun.** Six crates are built: motion, geometry, colour,
+paths, the reference renderer and compression. Nothing of it can be seen
+on a screen yet.
 
 Next to the suites named at the top, OfficeWorld is better at nothing
 today: they exist. What can be judged already is how it is built:
@@ -226,7 +230,12 @@ today: they exist. What can be judged already is how it is built:
   compared with the curve as it is drawn. The colour conversions are
   compared with the numbers the CSS specification gives. A stroke with a
   round pen has to cover exactly the points within half its width of the
-  path, measured point by point.
+  path, measured point by point. What the renderer says a shape covers of
+  a pixel is compared with the shape cut into triangles and each triangle
+  cut to that pixel.
+- **Checked against other programs.** Compression is tried against zlib
+  in both directions on every run of the checks: what is packed here zlib
+  unpacks, and what zlib packs, in every way it has, is unpacked here.
 - **Three systems.** The tests run on Linux, Windows and macOS on every
   push.
 

@@ -1,7 +1,8 @@
 # Architecture
 
-How OfficeWorld is put together. Four parts are built: motion, geometry,
-colour and paths. The rest of this page is the plan the code is written
+How OfficeWorld is put together. Six parts are built: motion, geometry,
+colour, paths, the reference renderer and compression. The rest of this
+page is the plan the code is written
 towards. It changes when building a part teaches something, and each part
 gets its own section here once it exists.
 
@@ -186,6 +187,53 @@ doubles back over itself, and leaves holes when it does not. The test is
 the definition of a stroke: with a round pen, a point is covered exactly
 when it lies within half the pen's width of the path.
 
+## The reference renderer
+
+`crates/raster`, package `ow-raster`. It depends on geometry, colour and
+paths. It fills paths into a picture in memory, on the CPU, exactly and
+the same on every machine. Exports, thumbnails and tests draw with it,
+and the renderer on the GPU will be measured against it.
+
+**Coverage.** A `Mask` holds, for every pixel a path reaches, the exact
+area of the path within that pixel. It does not sample points, so an edge
+is as smooth as the pixels allow at any angle. Each edge adds its part to
+the pixels it passes through, the parts of a row are summed from the left,
+and the fill rule is applied to the sum. Font rasterizers work this way,
+and the method has their known limit: where two edges of a shape that
+overlaps itself cross inside one pixel, that pixel can be a little off.
+A mask only holds the rows and columns its path reaches.
+
+**Pictures.** A `Pixmap` is rows of red, green, blue and alpha bytes, the
+colour multiplied by its alpha, which makes laying a colour over a pixel
+one step for each byte. Colours are blended as the numbers they are stored
+as and not as amounts of light. That is how browsers and the office
+suites blend, and a half transparent shape has to look here as it looks
+there. A picture is at most a quarter of a billion pixels; a larger one
+has to be drawn in parts.
+
+Not built: gradients, pictures as a fill, clipping, blend modes, text.
+
+## Compression
+
+`crates/flate`, package `ow-flate`. No dependencies. Every .docx, .xlsx
+and .pptx is a ZIP archive of deflate streams, a PNG picture holds its
+pixels in one and so does most of a PDF.
+
+**Unpacking** handles all three kinds of block. Whoever calls it names
+the most bytes it will take, because compressed data can unpack to a
+thousand times its size and a file can be built to. It reads one bit at a
+time, which is easy to check against the specification and slow.
+
+**Packing** finds earlier data that comes back and writes it as a length
+and a distance, in one block with the format's fixed codes. Any program
+that reads deflate reads the result. It is not the smallest the format
+allows: a block with codes fitted to its data is not built yet.
+
+Both directions are tried against zlib by `tools/check_flate.py` on every
+run of the checks. Readers for the formats above this one follow the same
+rule: an interoperability check against a program that was not written
+here.
+
 ## Planned parts
 
 **The renderer** takes a scene, which is a list of shapes, images and runs
@@ -225,8 +273,9 @@ use unsafe code, to talk to a platform or to the GPU, allows it for
 itself and gets a decision record.
 
 `tools/check.sh` runs the checks of CI's main job: formatting, clippy, the
-tests, the documentation build and three rules no compiler knows, each a
-small script beside it: no dashes, dependencies on the allow list, and at
-most one line of test for two lines of code. CI also runs the tests on
+tests, the interoperability checks, the documentation build and three
+rules no compiler knows, each a small script beside it: no dashes,
+dependencies on the allow list, and at most one line of test for two
+lines of code. CI also runs the tests on
 Windows and macOS, runs `cargo mutants` on what a push changed, and looks
 for known vulnerabilities.

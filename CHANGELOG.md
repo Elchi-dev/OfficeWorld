@@ -44,6 +44,17 @@
     either fill rule.
   - Strokes with miter, round and bevel joins, butt, round and square
     ends and a miter limit.
+- The reference renderer, `ow-raster`:
+  - `Mask`: the exact area of a path in every pixel it reaches, under
+    either fill rule.
+  - `Pixmap`: a picture in memory that paths are filled and stroked into
+    with a colour.
+- The compression crate, `ow-flate`:
+  - Deflate unpacked, all three kinds of block, into no more bytes than
+    the caller allows.
+  - Deflate packed, in one block with the fixed codes.
+  - The zlib wrapping in both directions, and the CRC-32 and Adler-32
+    checksums.
 - `tools/check.sh` with the three project rules: no dashes, dependencies
   on an allow list, at most one line of test for two lines of code.
 - CI: every check on Linux, the tests on Windows and macOS, mutation
@@ -75,7 +86,7 @@ Found by a review after the first push, before any release.
 
 ### Verified
 
-- 68 tests and 7 checked examples pass on Linux, Windows and macOS.
+- 79 tests and 10 checked examples pass on Linux, Windows and macOS.
 - The spring solution is put back into its differential equation, with
   its derivatives measured across a short step, for 8 springs across all
   three regimes, 3 starting states and 3 times each. Two of the springs
@@ -119,8 +130,22 @@ Found by a review after the first push, before any release.
   The path has corners turning each way, a line shorter than the pen is
   wide, a curve tighter than the pen, a closed shape smaller than the
   pen, a line that turns straight back and a dot.
-- `cargo mutants` (27.1.0) makes 1,429 small changes to the four crates.
-  176 do not compile, the tests catch 1,241, and the 12 that no test can
+- What the renderer says a shape covers of a pixel is compared, for every
+  pixel of a picture, with the shape cut into triangles and each triangle
+  cut to that pixel. Three shapes under both fill rules: a star that
+  crosses itself and reaches past every side of the picture, a sliver
+  thinner than a pixel, and a shape with edges along the pixel grid,
+  across it and nearly along it. They agree to a millionth.
+- One colour laid over another in a picture is compared with what the
+  colour crate computes for the two, for 16 pairs, and agrees to one step
+  of a byte.
+- Compression is tried against zlib in both directions by
+  `tools/check_flate.py`: 7 kinds of data, among them 600,000 bytes built
+  so that repeats of every length and from every distance occur. Each is
+  packed here and unpacked by zlib, and packed by zlib in 20 ways, every
+  strategy at four levels, and unpacked here.
+- `cargo mutants` (27.1.0) makes 1,862 small changes to the six crates.
+  202 do not compile, the tests catch 1,647, and the 13 that no test can
   notice are listed with their reasons in `.cargo/mutants.toml`.
 - Each rule check was seen refusing what it should: a file with an em
   dash or its HTML entity, a text file that is not UTF-8, a dependency

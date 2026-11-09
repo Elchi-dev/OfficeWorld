@@ -22,11 +22,17 @@ Done:
   path data. Flattening, tight bounds, exact areas, what is inside, and
   strokes with their joins and ends.
 
+- **A reference renderer.** Paths filled and stroked on the CPU into
+  pictures in memory, with the exact area of each pixel that a shape
+  covers. The renderer on the GPU will be measured against it.
+- **Compression.** Deflate and zlib in both directions, needed to write a
+  picture to a file now and to open office files later.
+
 Open:
 
-- **A reference renderer.** Paths filled on the CPU, into pictures that
-  can be looked at and compared. The renderer on the GPU is measured
-  against it.
+- **Pictures as files.** PNG first, so that what is drawn can be looked
+  at and compared.
+- **Gradients, pictures and text** in the reference renderer.
 - **The design system.** Colour, type, spacing and the motion vocabulary
   as tokens every app shares.
 - **The renderer.** Shapes, images and text on the GPU, in a window on
