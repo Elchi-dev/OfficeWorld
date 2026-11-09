@@ -12,9 +12,10 @@ authors = ["Elchi <github@elchi.dev>"]
 publish = false
 
 [workspace.lints.rust]
-# A crate that needs unsafe code (the platform layer, the GPU) says so in its
-# own manifest, with a decision record. Nothing gets it by default.
-unsafe_code = "forbid"
+# Denied and not forbidden, so the one module that has to talk to a platform
+# or to the GPU can allow it for itself, with a decision record. A forbidden
+# lint cannot be allowed again anywhere below.
+unsafe_code = "deny"
 missing_docs = "warn"
 
 [workspace.lints.clippy]
