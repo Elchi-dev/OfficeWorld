@@ -6,8 +6,9 @@
 # nothing a caller can see.
 
 exclude_re = [
-    # 0.0 is what Default::default() gives for a float.
-    'replace <impl Animatable for f(32|64)>::zero -> Self with Default::default\(\)',
+    # The zero of a number, a point, a size or a rectangle is what
+    # Default::default() gives for it.
+    'replace <impl Animatable for \w+>::zero -> Self with Default::default\(\)',
 
     # The easing solver's comparisons, each moved onto its own boundary
     # value. Stopping at an error of exactly 1e-14 and not just below it,

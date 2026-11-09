@@ -1,0 +1,16 @@
+[package]
+name = "ow-geometry"
+description = "Geometry for OfficeWorld: points, vectors, sizes, rectangles, rounded rectangles and affine transforms."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ow-motion = { path = "../motion" }
+
+[lints]
+workspace = true
