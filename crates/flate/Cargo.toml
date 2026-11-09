@@ -1,0 +1,13 @@
+[package]
+name = "ow-flate"
+description = "Compression for OfficeWorld: deflate and zlib, read and written, with the CRC-32 and Adler-32 checksums."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
