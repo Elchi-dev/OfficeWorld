@@ -8,6 +8,7 @@
 //! only on the time asked for, not on how many frames were drawn before, so
 //! an animation looks the same at any refresh rate. [`Animated`] is a value
 //! such a spring moves, and its target can change mid-flight without a jump.
+//! [`Tween`] and [`CubicBezier`] are for motion that takes a set time.
 //!
 //! ```
 //! use ow_motion::{Animated, Spring};
@@ -23,8 +24,10 @@
 
 mod animatable;
 mod animated;
+mod easing;
 mod spring;
 
 pub use animatable::Animatable;
 pub use animated::Animated;
+pub use easing::{CubicBezier, InvalidCurve, Tween};
 pub use spring::{InvalidSpring, Spring, Transition};
