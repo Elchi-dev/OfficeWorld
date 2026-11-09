@@ -11,6 +11,8 @@ use crate::spring::Spring;
 /// closed while it opens turns around instead of jumping or stalling.
 ///
 /// Times are seconds on any clock, as long as every call uses the same one.
+/// A time before the last change, or one that is not a number, counts as
+/// the moment of that change.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Animated<T> {
     spring: Spring,
@@ -124,7 +126,12 @@ impl<T: Animatable> Animated<T> {
     /// Makes `now` the moment the stored state describes.
     fn restart(&mut self, now: f64) {
         (self.displacement, self.velocity) = self.state(now);
-        self.since = now;
+        // A clock that steps back has moved the state by nothing, so it must
+        // not move the start either: the animation would rewind. A time that
+        // is not finite is not a moment to start from at all.
+        if now.is_finite() {
+            self.since = self.since.max(now);
+        }
     }
 }
 
@@ -158,6 +165,9 @@ mod tests {
         for frame in 1..=144 {
             let now = f64::from(frame) / 144.0;
             redrawn.set_target(250.0, now);
+            // Neither may a clock that steps back or a time that is no time.
+            redrawn.set_target(250.0, now - 0.5);
+            redrawn.set_target(250.0, f64::NAN);
             let gap = redrawn.value(now) - untouched.value(now);
             assert!(gap.abs() < 1e-9, "frame {frame} is {gap} off");
         }

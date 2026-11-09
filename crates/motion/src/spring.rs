@@ -25,25 +25,60 @@ pub struct Spring {
 pub struct InvalidSpring {
     parameter: &'static str,
     value: f64,
+    out_of_range: bool,
 }
 
 impl fmt::Display for InvalidSpring {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "A spring's {} must be a finite number above zero, but it is {}.",
-            self.parameter, self.value
-        )
+        let Self {
+            parameter, value, ..
+        } = self;
+        if self.out_of_range {
+            write!(
+                f,
+                "A spring's {parameter} is {value:e}. Next to its other constants that is too \
+                 large or too small to compute the motion."
+            )
+        } else {
+            write!(
+                f,
+                "A spring's {parameter} must be a finite number above zero, but it is {value}."
+            )
+        }
     }
 }
 
 impl Error for InvalidSpring {}
 
+fn usable(value: f64) -> bool {
+    value.is_finite() && value > 0.0
+}
+
 fn above_zero(parameter: &'static str, value: f64) -> Result<f64, InvalidSpring> {
-    if value.is_finite() && value > 0.0 {
+    let out_of_range = false;
+    if usable(value) {
         Ok(value)
     } else {
-        Err(InvalidSpring { parameter, value })
+        Err(InvalidSpring {
+            parameter,
+            value,
+            out_of_range,
+        })
+    }
+}
+
+/// Refuses `value` when a number the solution derives from it has left what
+/// an f64 holds.
+fn in_range(parameter: &'static str, value: f64, derived: f64) -> Result<(), InvalidSpring> {
+    let out_of_range = true;
+    if usable(derived) {
+        Ok(())
+    } else {
+        Err(InvalidSpring {
+            parameter,
+            value,
+            out_of_range,
+        })
     }
 }
 
@@ -55,71 +90,77 @@ impl Spring {
     /// Refuses a constant that is zero, negative, infinite or not a number.
     /// That includes a spring without damping: it would swing forever, and
     /// an animation that never ends keeps the screen drawing.
+    ///
+    /// Also refuses constants so far apart that the solution overflows.
+    /// Such a spring would not fail: it would answer with a wrong number
+    /// that looks like a right one.
     pub fn new(stiffness: f64, damping: f64, mass: f64) -> Result<Self, InvalidSpring> {
-        Ok(Self {
+        let spring = Self {
             stiffness: above_zero("stiffness", stiffness)?,
             damping: above_zero("damping", damping)?,
             mass: above_zero("mass", mass)?,
-        })
+        };
+        in_range("stiffness", stiffness, spring.frequency_squared())?;
+        in_range("damping", damping, spring.decay() * spring.decay())?;
+        Ok(spring)
     }
 
     /// A spring described the way it feels.
     ///
     /// `response` is how long one swing would take without damping, in
-    /// seconds: smaller is quicker. `damping_ratio` says how much it bounces:
-    /// below 1 it overshoots, at 1 it arrives as fast as it can without
-    /// overshooting, above 1 it creeps in.
+    /// seconds: smaller is quicker. `damping_ratio` says how the spring
+    /// settles. Below 1 it swings past the target and back. At 1 a value
+    /// that starts from rest arrives as fast as it can without passing the
+    /// target, and above 1 it creeps in more slowly. At any ratio a value
+    /// that arrives with enough speed still passes the target once.
     ///
     /// # Errors
     ///
-    /// Refuses a value that is zero, negative, infinite or not a number.
+    /// Refuses a value that is zero, negative, infinite or not a number, and
+    /// one so large or so small that the solution overflows.
     pub fn from_response(response: f64, damping_ratio: f64) -> Result<Self, InvalidSpring> {
         let frequency = TAU / above_zero("response", response)?;
         let damping = 2.0 * above_zero("damping ratio", damping_ratio)? * frequency;
+        // Checked here so the error names what the caller passed, and not
+        // the stiffness or the damping it would have turned into.
+        in_range("response", response, frequency * frequency)?;
+        in_range("damping ratio", damping_ratio, damping * damping)?;
         Self::new(frequency * frequency, damping, 1.0)
     }
 
-    /// The force per unit of distance from the target.
-    pub fn stiffness(&self) -> f64 {
-        self.stiffness
-    }
-
-    /// The force per unit of velocity, against the motion.
-    pub fn damping(&self) -> f64 {
-        self.damping
-    }
-
-    /// The mass being moved.
-    pub fn mass(&self) -> f64 {
-        self.mass
-    }
-
-    /// How much the spring bounces: below 1 it overshoots, from 1 on it does
-    /// not.
+    /// The damping as a share of the damping that just keeps the spring from
+    /// swinging. Below 1 it swings past its target and back.
     pub fn damping_ratio(&self) -> f64 {
         self.damping / (2.0 * (self.stiffness * self.mass).sqrt())
     }
 
+    fn frequency_squared(&self) -> f64 {
+        self.stiffness / self.mass
+    }
+
+    fn decay(&self) -> f64 {
+        self.damping / (2.0 * self.mass)
+    }
+
     /// How the spring carries a state forward over `elapsed` seconds.
     ///
-    /// A negative span counts as none.
+    /// A span that is negative or not a number counts as none. After an
+    /// infinite one the spring is at rest.
     pub fn transition(&self, elapsed: f64) -> Transition {
+        // `max` also turns a span that is not a number into zero.
         let time = elapsed.max(0.0);
-        let frequency_squared = self.stiffness / self.mass;
-        let decay = self.damping / (2.0 * self.mass);
+        let frequency_squared = self.frequency_squared();
+        let decay = self.decay();
         let discriminant = decay * decay - frequency_squared;
+        let envelope = (-decay * time).exp();
 
-        // With `envelope = exp(-decay * time)`, every solution is
+        // Every solution is
         //   x(t) = envelope * (x0 * c(t) + (v0 + decay * x0) * s(t))
-        // where c and s are cos and sin for a spring that overshoots, cosh
-        // and sinh for one that creeps, each s divided by its own frequency.
-        // `swing` is envelope * c and `drift` is envelope * s.
-        let (swing, drift) = if discriminant < 0.0 {
-            let frequency = (-discriminant).sqrt();
-            let envelope = (-decay * time).exp();
-            let angle = frequency * time;
-            (envelope * angle.cos(), envelope * angle.sin() / frequency)
-        } else if discriminant > 0.0 {
+        // where c is cos and s is sin divided by its frequency for a spring
+        // that swings, cosh and sinh divided by its rate for one that
+        // creeps, and 1 and t between the two. `swing` is envelope * c and
+        // `drift` is envelope * s.
+        let (swing, drift) = if discriminant > 0.0 {
             // cosh grows past what an f64 holds while envelope * cosh is
             // still an ordinary number, so written that way a stiff, heavily
             // damped spring is infinity times zero after a few seconds. The
@@ -131,8 +172,15 @@ impl Spring {
             let fast = (-(decay + rate) * time).exp();
             let drift = slow * -(-2.0 * rate * time).exp_m1() / (2.0 * rate);
             (f64::midpoint(slow, fast), drift)
+        } else if envelope == 0.0 {
+            // Nothing is left of the motion. Saying so here keeps the cos of
+            // infinity and zero times infinity out of the answer.
+            (0.0, 0.0)
+        } else if discriminant < 0.0 {
+            let frequency = (-discriminant).sqrt();
+            let angle = frequency * time;
+            (envelope * angle.cos(), envelope * angle.sin() / frequency)
         } else {
-            let envelope = (-decay * time).exp();
             (envelope, envelope * time)
         };
 
@@ -275,6 +323,15 @@ mod tests {
         let spring = Spring::from_response(0.3, 0.6).unwrap();
         assert_eq!(spring.transition(0.0).apply(7.0, -3.0), (7.0, -3.0));
         assert_eq!(spring.transition(-2.0), spring.transition(0.0));
+        assert_eq!(spring.transition(f64::NAN), spring.transition(0.0));
+        // After forever every spring has arrived. The formulas say cos of
+        // infinity for one that swings and zero times infinity at ratio 1.
+        for ratio in [0.6, 1.0, 3.0] {
+            let forever = Spring::from_response(0.3, ratio)
+                .unwrap()
+                .transition(f64::INFINITY);
+            assert_eq!(forever.apply(7.0, -3.0), (0.0, 0.0), "ratio {ratio}");
+        }
     }
 
     #[test]
@@ -289,14 +346,31 @@ mod tests {
         assert!(error.contains("response"), "{error}");
         assert!(Spring::new(f64::NAN, 1.0, 1.0).is_err());
         assert!(Spring::new(1.0, 1.0, f64::INFINITY).is_err());
+
+        // These are finite and above zero, and squaring them overflows: the
+        // first answered 0.5 for a spring that had not moved, the second
+        // blamed a stiffness of infinity nobody had passed.
+        let error = Spring::new(1.0, 1e200, 1.0).unwrap_err().to_string();
+        assert!(
+            error.starts_with("A spring's damping is 1e200. Next to"),
+            "{error}"
+        );
+        let error = Spring::from_response(1e-160, 1.0).unwrap_err().to_string();
+        assert!(error.starts_with("A spring's response is"), "{error}");
+        let error = Spring::from_response(0.3, 1e200).unwrap_err().to_string();
+        assert!(error.starts_with("A spring's damping ratio is"), "{error}");
+        assert!(Spring::new(1e200, 1.0, 1e-200).is_err());
     }
 
     #[test]
     fn response_and_ratio_describe_the_spring_they_built() {
         let spring = Spring::from_response(0.25, 0.8).unwrap();
-        let period = TAU / (spring.stiffness() / spring.mass()).sqrt();
+        let period = TAU / (spring.stiffness / spring.mass).sqrt();
         assert!((period - 0.25).abs() < 1e-12 && (spring.damping_ratio() - 0.8).abs() < 1e-12);
+        // A mass other than 1 counts in the ratio and in what rest means:
+        // this speed still carries the heavy value 0.02 away.
         let heavy = Spring::new(100.0, 40.0, 4.0).unwrap();
         assert!((heavy.damping_ratio() - 1.0).abs() < 1e-12);
+        assert!(!heavy.is_at_rest(0.0, 0.1, 0.01));
     }
 }

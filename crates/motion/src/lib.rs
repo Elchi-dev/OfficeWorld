@@ -29,5 +29,5 @@ mod spring;
 
 pub use animatable::Animatable;
 pub use animated::Animated;
-pub use easing::{CubicBezier, InvalidCurve, Tween};
+pub use easing::{CubicBezier, InvalidCurve, InvalidTween, Tween};
 pub use spring::{InvalidSpring, Spring, Transition};

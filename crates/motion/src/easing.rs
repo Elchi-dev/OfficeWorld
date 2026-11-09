@@ -79,14 +79,22 @@ impl CubicBezier {
 
     /// The share of the way covered when `progress` of the time has passed.
     ///
-    /// Before the start the answer is 0 and after the end it is 1.
+    /// Before the start the answer is 0 and after the end it is 1. A
+    /// progress that is not a number counts as none.
     pub fn ease(&self, progress: f64) -> f64 {
-        if progress <= 0.0 {
+        if progress.is_nan() || progress <= 0.0 {
             return 0.0;
         }
         if progress >= 1.0 {
             return 1.0;
         }
+        let (s, _) = self.parameter_at(progress);
+        bezier(s, self.y1, self.y2)
+    }
+
+    /// The parameter `s` at which the curve's time is `progress`, and the
+    /// number of guesses it took to find.
+    fn parameter_at(&self, progress: f64) -> (f64, u32) {
         // The curve is given as x(s) and y(s). x(s) never falls, so the s
         // that belongs to a time lies between 0 and 1 and every guess
         // narrows that bracket. Newton's method is taken while it stays
@@ -95,10 +103,10 @@ impl CubicBezier {
         // halved instead.
         let (mut low, mut high) = (0.0, 1.0);
         let mut s = progress;
-        for _ in 0..64 {
+        for guesses in 0..64 {
             let error = bezier(s, self.x1, self.x2) - progress;
             if error.abs() < 1e-14 {
-                break;
+                return (s, guesses);
             }
             if error > 0.0 {
                 high = s;
@@ -112,7 +120,7 @@ impl CubicBezier {
                 f64::midpoint(low, high)
             };
         }
-        bezier(s, self.y1, self.y2)
+        (s, 64)
     }
 }
 
@@ -139,17 +147,52 @@ pub struct Tween<T> {
     curve: CubicBezier,
 }
 
+/// A start or a duration that no move can have.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct InvalidTween {
+    start: f64,
+    duration: f64,
+}
+
+impl fmt::Display for InvalidTween {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "A tween needs a finite start and a finite duration of zero or more, \
+             but it got a start of {} and a duration of {}.",
+            self.start, self.duration
+        )
+    }
+}
+
+impl Error for InvalidTween {}
+
 impl<T: Animatable> Tween<T> {
     /// A move that begins at `start` and takes `duration` seconds. With a
-    /// duration that is not above zero it arrives the moment it begins.
-    pub fn new(from: T, to: T, start: f64, duration: f64, curve: CubicBezier) -> Self {
-        Self {
-            from,
-            to,
-            start,
-            // `max` also turns a duration that is not a number into zero.
-            duration: duration.max(0.0),
-            curve,
+    /// duration of zero it arrives the moment it begins.
+    ///
+    /// # Errors
+    ///
+    /// Refuses a start that is not finite, and a duration that is negative
+    /// or not finite. A move with such a duration is either over before it
+    /// began or never over.
+    pub fn new(
+        from: T,
+        to: T,
+        start: f64,
+        duration: f64,
+        curve: CubicBezier,
+    ) -> Result<Self, InvalidTween> {
+        if start.is_finite() && duration.is_finite() && duration >= 0.0 {
+            Ok(Self {
+                from,
+                to,
+                start,
+                duration,
+                curve,
+            })
+        } else {
+            Err(InvalidTween { start, duration })
         }
     }
 
@@ -158,14 +201,17 @@ impl<T: Animatable> Tween<T> {
         now >= self.start + self.duration
     }
 
-    /// The value at `now`: `from` until the start and exactly `to` from the
-    /// end on.
+    /// The value at `now`: exactly `from` until the start and exactly `to`
+    /// from the end on. A time that is not a number counts as before the
+    /// start.
     pub fn value(&self, now: f64) -> T {
         if self.is_finished(now) {
             return self.to;
         }
         let way = self.curve.ease((now - self.start) / self.duration);
-        self.from.plus(self.to.minus(self.from).scaled(way))
+        // Not `from + (to - from) * way`: that difference overflows for two
+        // values far apart, and it lands beside `to` at the end of the way.
+        self.from.scaled(1.0 - way).plus(self.to.scaled(way))
     }
 }
 
@@ -209,6 +255,12 @@ mod tests {
             }
         }
 
+        // Halving the bracket alone finds every answer too, in about 45
+        // guesses. Newton's method is there to make that a handful, for a
+        // screen with thousands of tweens on it.
+        let most = (1..100).map(|step| CubicBezier::EASE.parameter_at(f64::from(step) / 100.0).1);
+        assert!(most.max() <= Some(6));
+
         // Time creeps at the start of this curve, x = s * s * s. Newton's
         // first step from there lands far outside the curve, and without the
         // bracket it does not find its way back in the steps it has.
@@ -228,16 +280,33 @@ mod tests {
 
     #[test]
     fn a_tween_holds_its_ends_exactly() {
-        // 0.1 + (0.3 - 0.1) is 0.30000000000000004: blended at the end, a
+        // 0.1 + (0.3 - 0.1) is 0.30000000000000004: blended that way, a
         // tween would stop a hair beside the value it was sent to.
-        let tween = Tween::new(0.1_f64, 0.3, 2.0, 0.5, CubicBezier::LINEAR);
+        let tween = Tween::new(0.1_f64, 0.3, 2.0, 0.5, CubicBezier::LINEAR).unwrap();
         assert_eq!((tween.value(1.0), tween.value(2.5)), (0.1, 0.3));
+        assert_eq!((tween.value(f64::NAN), tween.value(9.0)), (0.1, 0.3));
         assert!((tween.value(2.25) - 0.2).abs() < 1e-12);
         assert!(!tween.is_finished(2.49) && tween.is_finished(2.5));
 
-        // A duration below zero arrives at once. It is not over before it
-        // began.
-        let instant = Tween::new(0.1, 0.3, 2.0, -1.0, CubicBezier::EASE);
-        assert_eq!((instant.value(1.5), instant.value(2.0)), (0.1, 0.3));
+        let instant = Tween::new(0.1, 0.3, 2.0, 0.0, CubicBezier::EASE).unwrap();
+        assert_eq!((instant.value(1.99), instant.value(2.0)), (0.1, 0.3));
+
+        // The difference of these two is infinite, and their blend is not.
+        let far = Tween::new(-1e308, 1e308, 0.0, 1.0, CubicBezier::LINEAR).unwrap();
+        assert_eq!((far.value(-1.0), far.value(0.5)), (-1e308, 0.0));
+    }
+
+    #[test]
+    fn a_tween_that_is_over_before_it_began_or_never_over_is_refused() {
+        let curve = CubicBezier::LINEAR;
+        let error = Tween::new(0.0, 1.0, 2.0, -1.0, curve).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .ends_with("a start of 2 and a duration of -1.")
+        );
+        assert!(Tween::new(0.0, 1.0, 2.0, f64::INFINITY, curve).is_err());
+        assert!(Tween::new(0.0, 1.0, 2.0, f64::NAN, curve).is_err());
+        assert!(Tween::new(0.0, 1.0, f64::NAN, 1.0, curve).is_err());
     }
 }
