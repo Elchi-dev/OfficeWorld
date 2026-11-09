@@ -255,7 +255,7 @@ every page after it.
 The server of phase 6 cannot read documents, so it cannot merge them:
 changes made apart are merged on the devices, and the model is built so
 that every device arrives at the same result whatever order the changes
-reach it in.
+reach it in. Its design is in [MODEL](MODEL.md).
 
 **The formats** are translators between the model and .docx, .xlsx, .pptx
 and OpenDocument. What a translator does not understand, it keeps and

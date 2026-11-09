@@ -251,6 +251,7 @@ and [CHANGELOG](CHANGELOG.md) says what was verified and how.
 | [ROADMAP](docs/ROADMAP.md) | the phases, what is in and out, and why in that order |
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | how the parts fit together |
 | [DECISIONS](docs/DECISIONS.md) | why things are the way they are, with what was rejected |
+| [MODEL](docs/MODEL.md) | the design of the one document model, before it is built |
 | [CONTRIBUTING](CONTRIBUTING.md) | building, checking and the rules |
 | [SECURITY](SECURITY.md) | reporting a vulnerability |
 | [CHANGELOG](CHANGELOG.md) | what changed |
