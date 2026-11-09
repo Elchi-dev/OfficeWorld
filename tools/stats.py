@@ -16,6 +16,11 @@ Counted are Rust lines that are neither blank nor only a comment.
   show, and neither is the product or a test of it.
 - Examples in doc comments are comments and count on neither side. They are
   documentation first, and they run as tests so they cannot go stale.
+- A file in `src` whose first line begins `// Table made by tools/` is
+  data that a script made from a published source, such as the properties
+  of Unicode characters. It counts on neither side and is listed apart,
+  because nobody wrote it and nobody should claim it as code. Such a file
+  holds tables and no functions, which the script checks.
 
 Usage: stats.py [--check]
 """
@@ -32,6 +37,8 @@ from workspace import ROOT, fail, members  # noqa: E402
 
 LIMIT = 0.5
 TEST_MARK = re.compile(r"#\[(test|bench)\]|#!?\[cfg\(.*\btest\b")
+TABLE_MARK = "// Table made by tools/"
+FUNCTION = re.compile(r"\b(fn|impl|trait|macro_rules)\b")
 
 
 def code_lines(lines):
@@ -74,32 +81,46 @@ def count_source(path):
     return code, test
 
 
+def count_table(path, lines):
+    """Returns the lines of a file of tables, or refuses one with code in it."""
+    for index, line in code_lines(lines):
+        if FUNCTION.search(line):
+            fail(
+                f"{path.relative_to(ROOT)}:{index + 1}: a file of tables holds tables "
+                "only. Code that reads them belongs in a file that is counted."
+            )
+    return sum(1 for _ in code_lines(lines))
+
+
 def count_crate(crate):
-    code = test = 0
+    code = test = table = 0
     for path in sorted(crate.rglob("*.rs")):
         place = path.relative_to(crate).parts[0]
         if place in ("benches", "examples", "target"):
             continue
+        lines = path.read_text(encoding="utf-8").splitlines()
         if place == "tests":
-            test += sum(1 for _ in code_lines(path.read_text(encoding="utf-8").splitlines()))
+            test += sum(1 for _ in code_lines(lines))
+        elif lines[:1] and lines[0].startswith(TABLE_MARK):
+            table += count_table(path, lines)
         else:
             file_code, file_test = count_source(path)
             code += file_code
             test += file_test
-    return code, test
+    return code, test, table
 
 
 def main():
     rows = [(str(crate.relative_to(ROOT)), *count_crate(crate)) for crate in members()]
     total_code = sum(row[1] for row in rows)
     total_test = sum(row[2] for row in rows)
-    rows.append(("total", total_code, total_test))
+    rows.append(("total", total_code, total_test, sum(row[3] for row in rows)))
 
     width = max(len(row[0]) for row in rows)
-    print(f"{'crate':<{width}}  {'code':>8}  {'tests':>8}  ratio")
-    for name, code, test in rows:
+    print(f"{'crate':<{width}}  {'code':>8}  {'tests':>8}  ratio  {'tables':>8}")
+    for name, code, test, table in rows:
         ratio = f"{test / code:.2f}" if code else "n/a"
-        print(f"{name:<{width}}  {code:>8}  {test:>8}  {ratio:>5}")
+        print(f"{name:<{width}}  {code:>8}  {test:>8}  {ratio:>5}  {table:>8}")
 
     if "--check" in sys.argv[1:] and total_test > LIMIT * total_code:
         fail(
